@@ -22,10 +22,9 @@ time.sleep(2)
 stuur_character_HIGH()
 
 
-# while(True):
-#     time.sleep(1)
-#     if(arduino.in_waiting >= 0):
-#         data = arduino.readline()[:-2]
-#         decoded_data = str(data,'utf-8')
-#         print("on arduino com:", decoded_data)
+while(True):
+    if(arduino.in_waiting >= 0):
+        data = arduino.readline()[:-2]
+        decoded_data = str(data,'utf-8')
+        print("on arduino com:", decoded_data)
     

@@ -12,8 +12,6 @@ int incomingByte;
 String data;
 
 void setup() {
-  pinMode(7, OUTPUT); 
-  digitalWrite(7, LOW);
   mySerial.begin(9600); 
   printer.begin();
   Serial.begin(9600);
