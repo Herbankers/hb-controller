@@ -11,12 +11,11 @@
 MFRC522 rfid(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
 
-#define BLOCK_SIZE	16
-
 #define SECTOR		0	/* First sector */
 #define DATA1_BLOCK	1	/* First data block (not using 0 bcs it's the Manufacturer Block) */
 #define DATA2_BLOCK	2	/* Second data block */
-#define TRAILER_BLOCK	3	/* Sector 0 trailer block */
+
+#define BLOCK_SIZE	16
 
 byte iban[BLOCK_SIZE * 2];	/* IBAN buffer */
 
@@ -32,11 +31,9 @@ void loop()
 		return;
 
 	/* check if this is a MIFARE classic */
-	MFRC522::PICC_Type type = rfid.PICC_GetType(rfid.uid.sak);
-
 	Serial.print("Checking compatibility... ");
 
-	if (type != MFRC522::PICC_TYPE_MIFARE_1K) {
+	if (rfid.PICC_GetType(rfid.uid.sak) != MFRC522::PICC_TYPE_MIFARE_1K) {
 		Serial.println("ERROR");
 		Serial.println(" Card is not supported");
 		goto err;
@@ -47,14 +44,14 @@ void loop()
 	/* authenticate key A (but apparently we don't need this to write to block 0 and 1 */
 	Serial.println("Authenticating... ");
 
-	/* if (rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, TRAILER_BLOCK, &key, &rfid.uid) != 0) {
+	/* if (rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, SECTOR + 3, &key, &rfid.uid) != 0) {
 		Serial.println("ERROR");
 		Serial.println(" Key A authentication failed");
 		goto err;
 	} */
 
 	/* authenticate key B */
-	if (rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B, TRAILER_BLOCK, &key, &rfid.uid) != 0) {
+	if (rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B, SECTOR + 3, &key, &rfid.uid) != 0) {
 		Serial.println("ERROR");
 		Serial.println(" Key B authentication failed");
 		goto err;
