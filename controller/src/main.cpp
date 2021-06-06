@@ -36,14 +36,14 @@
 #include "SoftwareSerial.h"
 
 /* printer */
-#define TX_PIN A0
-#define RX_PIN A1
+#define TX_PIN	A0
+#define RX_PIN	A1
 
 SoftwareSerial printer(RX_PIN, TX_PIN);
 
 /* rfid */
-#define SS_PIN 10
-#define RST_PIN 9
+#define RST_PIN	9
+#define SS_PIN	10
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
