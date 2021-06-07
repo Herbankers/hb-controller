@@ -7,6 +7,8 @@
 #define motorTwintig 5
 
 int motorSpeed = 75;
+int incomingByte;
+String data;
 
 
 void setup() {
@@ -15,16 +17,17 @@ void setup() {
    pinMode(motorTwintig, OUTPUT);
    pinMode(speedA, OUTPUT);
    pinMode(speedB, OUTPUT);
-   
    Serial.begin(9600);
 }
 
-void motor(int motor){
-  digitalWrite(motor, HIGH);
-  //testen hoelang draaien voor 1 kaart
-  delay(2500);
-  Serial.println(motor);
-  resetMotoren(motorVijf, motorTien, motorTwintig);
+void motor(int motor, int amount){
+  for(int i = 0; i < amount; i++){
+    digitalWrite(motor, HIGH);
+    //testen hoelang draaien voor 1 kaart
+    delay(2500);
+    resetMotoren(motorVijf, motorTien, motorTwintig);
+    delay(500);
+  }
 }
   
 void resetMotoren(int motor1, int motor2, int motor3){
@@ -34,15 +37,47 @@ void resetMotoren(int motor1, int motor2, int motor3){
   
   }
 
+void readInput(){
+  if(Serial.available() > 0){
+    incomingByte = Serial.read();
+    data += char(incomingByte);
+    if(char(incomingByte) == '\0'){
+      Serial.println(data);
+      parseInput();
+    }
+  }
+}
+
+void parseInput(){
+  //data string is remembered and elements are being removed so can call function with null
+  
+  String motor1 = strtok(data.c_str(), ",");
+  String motor2 = strtok(NULL, ",");
+  String motor3 = strtok(NULL, ",");
+
+  int motor1Amount = motor1.toInt();
+  int motor2Amount = motor2.toInt();
+  int motor3Amount = motor3.toInt();
+  
+  Serial.println(motor1Amount);
+  Serial.println(motor2Amount);
+  Serial.println(motor3Amount);
+
+  motor(motorVijf, motor1Amount);
+  motor(motorTien, motor2Amount);
+  motor(motorTwintig, motor3Amount);
+
+}
+
+
+
 void loop() {
   analogWrite(speedA, motorSpeed);
   analogWrite(speedB, motorSpeed);
-  motor(motorVijf);
-  delay(100);
-  motor(motorTien);
-  delay(100);
-  motor(motorTwintig);
-  delay(100);
+  readInput();
+  //motor(motorVijf);
+  //motor(motorTien);
+  //motor(motorTwintig);
   
 
   
