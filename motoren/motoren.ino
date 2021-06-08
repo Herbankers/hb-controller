@@ -1,10 +1,12 @@
-
+#include <stdio.h>
+#include <string.h>
 //pwm possible on pins 3,5,6,9,10,11 on arduino uno
-#define speedA 9
+#define speedA 3
 #define speedB 10
-#define motorVijf 3
+#define motorVijf 2
 #define motorTien 4
 #define motorTwintig 5
+
 
 int motorSpeed = 75;
 int incomingByte;
@@ -51,22 +53,30 @@ void readInput(){
 void parseInput(){
   //data string is remembered and elements are being removed so can call function with null
   
-  String motor1 = strtok(data.c_str(), ",");
-  String motor2 = strtok(NULL, ",");
-  String motor3 = strtok(NULL, ",");
+  String check= strtok(data.c_str(), ",");
+  if(check == "M"){
+    Serial.println("Motor");
+    String motor1 = strtok(NULL, ",");
+    String motor2 = strtok(NULL, ",");
+    String motor3 = strtok(NULL, ",");
 
-  int motor1Amount = motor1.toInt();
-  int motor2Amount = motor2.toInt();
-  int motor3Amount = motor3.toInt();
-  
-  Serial.println(motor1Amount);
-  Serial.println(motor2Amount);
-  Serial.println(motor3Amount);
+    int motor1Amount = motor1.toInt();
+    int motor2Amount = motor2.toInt();
+    int motor3Amount = motor3.toInt();
 
-  motor(motorVijf, motor1Amount);
-  motor(motorTien, motor2Amount);
-  motor(motorTwintig, motor3Amount);
-
+    motor(motorVijf, motor1Amount);
+    motor(motorTien, motor2Amount);
+    motor(motorTwintig, motor3Amount);
+    }
+    
+  else if(check == "B"){
+    Serial.println("Bon");
+    char *bedrag = strtok(NULL, ",");
+    char *tijd = strtok(NULL, ",");
+    char *datum = strtok(NULL, ",");
+    char *rekeningNummer = strtok(NULL, ",");
+    char *locatie = strtok(NULL, ",");
+  }
 }
 
 
