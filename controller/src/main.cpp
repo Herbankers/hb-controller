@@ -35,15 +35,25 @@
 #include <string.h>
 #include "SoftwareSerial.h"
 
+/* DC motors */
+#define M5_PIN		2	/*  5 EUR motor */
+#define M10_PIN		4	/* 10 EUR motor */
+#define M20_PIN		5	/* 20 EUR motor */
+#define EN_PIN		3	/* motor speed control */
+
+#define MOTOR_SPEED	75
+
+static const char *sep = ",";
+
 /* printer */
-#define TX_PIN	A0
-#define RX_PIN	A1
+#define TX_PIN		A0
+#define RX_PIN		A1
 
 SoftwareSerial printer(RX_PIN, TX_PIN);
 
 /* rfid */
-#define RST_PIN	9
-#define SS_PIN	10
+#define RST_PIN		9
+#define SS_PIN		10
 
 MFRC522 rfid(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
@@ -65,10 +75,31 @@ char keymap[ROWS][COLS] = {
 	{'7', '8', '9'},
 	{'*', '0', '#'}
 };
-byte rowPins[ROWS] = { 3, 8, 7, 5 };
-byte colPins[COLS] = { 4, 2, 6 };
+byte rowPins[ROWS] = { A3, 8, 7, A5 };
+byte colPins[COLS] = { A4, A2, 6 };
 
 Keypad customKeypad = Keypad(makeKeymap(keymap), rowPins, colPins, ROWS, COLS);
+
+void resetMotors()
+{
+	digitalWrite(M5_PIN, LOW);
+	digitalWrite(M10_PIN, LOW);
+	digitalWrite(M20_PIN, LOW);
+}
+
+/* rotate the DC motor to eject the requested bills accordingly */
+void motor(int pin, int amount)
+{
+	analogWrite(EN_PIN, MOTOR_SPEED);
+
+	for (int i = 0; i < amount; i++)  {
+		digitalWrite(pin, HIGH);
+		delay(1000);
+
+		resetMotors();
+		delay(500);
+	}
+}
 
 /* read the pressed key from the keypad */
 void readKey()
@@ -126,27 +157,50 @@ void readSerial()
 	if (Serial.available() <= 0)
 		return;
 
+	uint8_t c = (uint8_t) Serial.read();
+
 	/*
 	 * allow the '[' character to switch to forwarding USB serial data directly
 	 * to the thermal printer's serial line until ']' in encountered
 	 */
-	uint8_t c = (uint8_t) Serial.read();
-	if (c != '[')
-		return;
+	if (c == '[') {
+		/* printer serial forwarding */
+		for (;;) {
+			if (Serial.available() <= 0)
+				continue;
 
-	/* printer serial forwarding */
-	for (;;) {
-		if (Serial.available() <= 0)
-			continue;
+			c = (uint8_t) Serial.read();
+			if (c == ']')
+				break;
 
-		c = (uint8_t) Serial.read();
-		if (c == ']')
-			break;
+			printer.write(c);
 
-		printer.write(c);
+			if (printer.available() > 0)
+				Serial.write(printer.read());
+		}
+	} else if (c == '(') {
+		String str;
+		char *fives, *tens, *twenties;
 
-		if (printer.available() > 0)
-			Serial.write(printer.read());
+		for (;;) {
+			if (Serial.available() <= 0)
+				continue;
+
+			c = (uint8_t) Serial.read();
+			if (c == ')')
+				break;
+
+			str += (char) c;
+		}
+
+		if ((fives = strtok(str.c_str(), sep)))
+			motor(M5_PIN, strtol(fives, NULL, 10));
+		if ((tens = strtok(NULL, sep)))
+			motor(M10_PIN, strtol(tens, NULL, 10));
+		if ((twenties = strtok(NULL, sep)))
+			motor(M20_PIN, strtol(twenties, NULL, 10));
+
+		Serial.println("D");
 	}
 }
 
@@ -163,7 +217,13 @@ void setup()
 	Serial.begin(9600);
 	while (!Serial);
 
-	/* initialize all peripherals */
+	/* initialize the DC motors */
+	pinMode(M5_PIN, OUTPUT);
+	pinMode(M10_PIN, OUTPUT);
+	pinMode(M20_PIN, OUTPUT);
+	pinMode(EN_PIN, OUTPUT);
+
+	/* initialize all remaining peripherals */
 	printer.begin(9600);
 	SPI.begin();
 	rfid.PCD_Init();
