@@ -199,6 +199,8 @@ void readSerial()
 			motor(M10_PIN, strtol(tens, NULL, 10));
 		if ((twenties = strtok(NULL, sep)))
 			motor(M20_PIN, strtol(twenties, NULL, 10));
+
+		Serial.println("D");
 	}
 }
 
