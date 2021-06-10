@@ -122,7 +122,7 @@ void readCard()
 
 	/* authenticate key B */
 	if (rfid.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_B, SECTOR + 3, &key, &rfid.uid) != 0)
-		return;
+		goto ret;
 
 	byte buf_size = BLOCK_SIZE + 2;
 	byte buf[buf_size * 2];
@@ -130,7 +130,7 @@ void readCard()
 	/* yes we're overwriting the CRC here, bcs we won't be checking it. Kinda lazy but what evvs */
 	if (rfid.MIFARE_Read(DATA1_BLOCK, buf, &buf_size) != 0 ||
 			rfid.MIFARE_Read(DATA2_BLOCK, buf + BLOCK_SIZE, &buf_size) != 0)
-		return;
+		goto ret;
 
 	/* print the UID */
 	Serial.print("U");
@@ -146,6 +146,7 @@ void readCard()
 		Serial.print((char) buf[i]);
 	Serial.println();
 
+ret:
 	/* finalize */
 	rfid.PICC_HaltA();
 	rfid.PCD_StopCrypto1();
